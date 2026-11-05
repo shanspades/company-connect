@@ -1,0 +1,6 @@
+node_modules/
+.firebase/
+data/*.db
+data/.jwt_secret
+*.log
+.DS_Store

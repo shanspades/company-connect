@@ -172,7 +172,9 @@ const initialPostsData: PostData[] = [
 // ==========================================
 // BACKEND API CLIENT
 // ==========================================
-const API_BASE = '/api';
+const API_BASE = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '3000')
+  ? '/api'
+  : 'https://company-connect-api.onrender.com/api';
 
 async function apiCall(endpoint: string, method = 'GET', body?: any) {
   const token = localStorage.getItem('cc_token');
@@ -3897,13 +3899,16 @@ function EmployeeRegistration({
 
 function Registration({ setScreen, onRegister }: { setScreen: (s: AuthScreen) => void; onRegister?: (f: any) => Promise<boolean> }) {
   const [step, setStep] = useState(1)
-  const [compName, setCompName] = useState('Innovix Technologies')
+  const [compName, setCompName] = useState('')
   const [industry, setIndustry] = useState('Technology & Software')
-  const [compSize, setCompSize] = useState('201–500 employees')
-  const [compEmail, setCompEmail] = useState('hello@innovix.com')
-  const [compWebsite, setCompWebsite] = useState('https://innovix.com')
-  const [adminName, setAdminName] = useState('Alicia Rodriguez')
-  const [adminEmail, setAdminEmail] = useState('alicia@innovix.com')
+  const [compSize, setCompSize] = useState('51–200 employees')
+  const [compEmail, setCompEmail] = useState('')
+  const [compWebsite, setCompWebsite] = useState('')
+  const [adminName, setAdminName] = useState('')
+  const [adminEmail, setAdminEmail] = useState('')
+  const [adminPass, setAdminPass] = useState('')
+  const [confirmPass, setConfirmPass] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   return (
     <div className="registration-page">
@@ -3967,35 +3972,35 @@ function Registration({ setScreen, onRegister }: { setScreen: (s: AuthScreen) =>
                   <option>500+ employees</option>
                 </select>
               </label>
-              <label>Company email<input value={compEmail} onChange={e => setCompEmail(e.target.value)}/></label>
-              <label>Company website<input value={compWebsite} onChange={e => setCompWebsite(e.target.value)}/></label>
+              <label>Company email<input value={compEmail} onChange={e => setCompEmail(e.target.value)} placeholder="e.g. contact@acme.com"/></label>
+              <label>Company website<input value={compWebsite} onChange={e => setCompWebsite(e.target.value)} placeholder="e.g. https://acme.com"/></label>
               <label className="full">Company description<textarea defaultValue="Building innovative tools for modern enterprise collaboration."/></label>
             </div>
           ) : step === 2 ? (
             <div className="form-grid one">
-              <label>Administrator full name<input value={adminName} onChange={e => setAdminName(e.target.value)}/></label>
-              <label>Admin email<input value={adminEmail} onChange={e => setAdminEmail(e.target.value)}/></label>
-              <label>Password<input type="password" defaultValue="demo1234"/></label>
-              <label>Confirm password<input type="password" defaultValue="demo1234"/></label>
+              <label>Administrator full name<input value={adminName} onChange={e => setAdminName(e.target.value)} placeholder="e.g. Jane Doe"/></label>
+              <label>Admin work email<input value={adminEmail} onChange={e => setAdminEmail(e.target.value)} placeholder="e.g. jane@acme.com"/></label>
+              <label>Password<input type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)} placeholder="Minimum 6 characters (letters & numbers)"/></label>
+              <label>Confirm password<input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} placeholder="Re-enter password"/></label>
               <div className="password-hint">
-                <span><Icon name="check" size={14}/>8+ characters</span>
-                <span><Icon name="check" size={14}/>One number</span>
-                <span><Icon name="check" size={14}/>One symbol</span>
+                <span style={{ color: adminPass.length >= 6 ? 'var(--emerald)' : undefined }}><Icon name="check" size={14}/>6+ characters</span>
+                <span style={{ color: (/[A-Za-z]/.test(adminPass) && /[0-9]/.test(adminPass)) ? 'var(--emerald)' : undefined }}><Icon name="check" size={14}/>Letters & numbers</span>
+                <span style={{ color: (adminPass && adminPass === confirmPass) ? 'var(--emerald)' : undefined }}><Icon name="check" size={14}/>Passwords match</span>
               </div>
             </div>
           ) : (
             <div className="review-card">
-              <span className="workspace-logo large">IN</span>
+              <span className="workspace-logo large">{compName ? compName.slice(0, 2).toUpperCase() : 'CO'}</span>
               <div>
                 <small>REGISTERED COMPANY</small>
-                <b>{compName}</b>
+                <b>{compName || 'Your Company'}</b>
                 <p>{industry} · {compSize}</p>
               </div>
               <hr/>
               <div>
                 <small>MASTER ADMINISTRATOR</small>
-                <b>{adminName}</b>
-                <p>{adminEmail}</p>
+                <b>{adminName || 'Admin'}</b>
+                <p>{adminEmail || 'admin@company.com'}</p>
               </div>
               <div className="secure-callout">
                 <Icon name="shield"/>
@@ -4011,27 +4016,40 @@ function Registration({ setScreen, onRegister }: { setScreen: (s: AuthScreen) =>
             <button className="secondary-button" onClick={() => step === 1 ? setScreen('portal') : setStep(step - 1)}>
               Back
             </button>
-            <button className="primary-button" onClick={async () => {
-              if (step < 3) {
-                setStep(step + 1);
+            <button className="primary-button" disabled={submitting} onClick={async () => {
+              if (step === 1) {
+                if (!compName.trim()) { alert('Please enter your company name.'); return; }
+                setStep(2);
+              } else if (step === 2) {
+                if (!adminName.trim()) { alert('Please enter administrator full name.'); return; }
+                if (!adminEmail.trim()) { alert('Please enter administrator work email.'); return; }
+                if (!adminPass || adminPass.length < 6) { alert('Password must be at least 6 characters long.'); return; }
+                if (!/[A-Za-z]/.test(adminPass) || !/[0-9]/.test(adminPass)) { alert('Password must contain both letters and numbers.'); return; }
+                if (adminPass !== confirmPass) { alert('Passwords do not match. Please verify.'); return; }
+                setStep(3);
               } else {
                 if (onRegister) {
-                  await onRegister({
-                    companyName: compName,
+                  setSubmitting(true);
+                  const ok = await onRegister({
+                    companyName: compName.trim(),
                     industry,
                     companySize: compSize,
-                    companyEmail: compEmail,
-                    website: compWebsite,
-                    adminName,
-                    adminEmail,
-                    password: 'password123'
+                    companyEmail: compEmail.trim() || adminEmail.trim(),
+                    website: compWebsite.trim(),
+                    adminName: adminName.trim(),
+                    adminEmail: adminEmail.trim(),
+                    password: adminPass
                   });
+                  setSubmitting(false);
+                  if (!ok) {
+                    // Stays on step 3 so user can view toast message
+                  }
                 } else {
                   setScreen('workspace');
                 }
               }
             }}>
-              {step === 3 ? 'Generate Workspace' : 'Continue'} <Icon name="arrow" size={15}/>
+              {submitting ? 'Generating workspace...' : step === 3 ? 'Generate Workspace' : 'Continue'} <Icon name="arrow" size={15}/>
             </button>
           </div>
         </main>

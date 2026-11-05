@@ -442,7 +442,7 @@ const initialPostsData = [{
 // ==========================================
 // BACKEND API CLIENT
 // ==========================================
-const API_BASE = '/api';
+const API_BASE = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '3000' ? '/api' : 'https://company-connect-api.onrender.com/api';
 async function apiCall(endpoint, method = 'GET', body) {
   const token = localStorage.getItem('cc_token');
   const headers = {
@@ -4511,13 +4511,16 @@ function Registration({
   onRegister
 }) {
   const [step, setStep] = useState(1);
-  const [compName, setCompName] = useState('Innovix Technologies');
+  const [compName, setCompName] = useState('');
   const [industry, setIndustry] = useState('Technology & Software');
-  const [compSize, setCompSize] = useState('201–500 employees');
-  const [compEmail, setCompEmail] = useState('hello@innovix.com');
-  const [compWebsite, setCompWebsite] = useState('https://innovix.com');
-  const [adminName, setAdminName] = useState('Alicia Rodriguez');
-  const [adminEmail, setAdminEmail] = useState('alicia@innovix.com');
+  const [compSize, setCompSize] = useState('51–200 employees');
+  const [compEmail, setCompEmail] = useState('');
+  const [compWebsite, setCompWebsite] = useState('');
+  const [adminName, setAdminName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   return /*#__PURE__*/React.createElement("div", {
     className: "registration-page"
   }, /*#__PURE__*/React.createElement("header", null, /*#__PURE__*/React.createElement(Logo, null), /*#__PURE__*/React.createElement("button", {
@@ -4563,10 +4566,12 @@ function Registration({
     onChange: e => setCompSize(e.target.value)
   }, /*#__PURE__*/React.createElement("option", null, "1\u201350 employees"), /*#__PURE__*/React.createElement("option", null, "51\u2013200 employees"), /*#__PURE__*/React.createElement("option", null, "201\u2013500 employees"), /*#__PURE__*/React.createElement("option", null, "500+ employees"))), /*#__PURE__*/React.createElement("label", null, "Company email", /*#__PURE__*/React.createElement("input", {
     value: compEmail,
-    onChange: e => setCompEmail(e.target.value)
+    onChange: e => setCompEmail(e.target.value),
+    placeholder: "e.g. contact@acme.com"
   })), /*#__PURE__*/React.createElement("label", null, "Company website", /*#__PURE__*/React.createElement("input", {
     value: compWebsite,
-    onChange: e => setCompWebsite(e.target.value)
+    onChange: e => setCompWebsite(e.target.value),
+    placeholder: "e.g. https://acme.com"
   })), /*#__PURE__*/React.createElement("label", {
     className: "full"
   }, "Company description", /*#__PURE__*/React.createElement("textarea", {
@@ -4575,32 +4580,50 @@ function Registration({
     className: "form-grid one"
   }, /*#__PURE__*/React.createElement("label", null, "Administrator full name", /*#__PURE__*/React.createElement("input", {
     value: adminName,
-    onChange: e => setAdminName(e.target.value)
-  })), /*#__PURE__*/React.createElement("label", null, "Admin email", /*#__PURE__*/React.createElement("input", {
+    onChange: e => setAdminName(e.target.value),
+    placeholder: "e.g. Jane Doe"
+  })), /*#__PURE__*/React.createElement("label", null, "Admin work email", /*#__PURE__*/React.createElement("input", {
     value: adminEmail,
-    onChange: e => setAdminEmail(e.target.value)
+    onChange: e => setAdminEmail(e.target.value),
+    placeholder: "e.g. jane@acme.com"
   })), /*#__PURE__*/React.createElement("label", null, "Password", /*#__PURE__*/React.createElement("input", {
     type: "password",
-    defaultValue: "demo1234"
+    value: adminPass,
+    onChange: e => setAdminPass(e.target.value),
+    placeholder: "Minimum 6 characters (letters & numbers)"
   })), /*#__PURE__*/React.createElement("label", null, "Confirm password", /*#__PURE__*/React.createElement("input", {
     type: "password",
-    defaultValue: "demo1234"
+    value: confirmPass,
+    onChange: e => setConfirmPass(e.target.value),
+    placeholder: "Re-enter password"
   })), /*#__PURE__*/React.createElement("div", {
     className: "password-hint"
-  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(Icon, {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: adminPass.length >= 6 ? 'var(--emerald)' : undefined
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
     name: "check",
     size: 14
-  }), "8+ characters"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(Icon, {
+  }), "6+ characters"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: /[A-Za-z]/.test(adminPass) && /[0-9]/.test(adminPass) ? 'var(--emerald)' : undefined
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
     name: "check",
     size: 14
-  }), "One number"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(Icon, {
+  }), "Letters & numbers"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: adminPass && adminPass === confirmPass ? 'var(--emerald)' : undefined
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
     name: "check",
     size: 14
-  }), "One symbol"))) : /*#__PURE__*/React.createElement("div", {
+  }), "Passwords match"))) : /*#__PURE__*/React.createElement("div", {
     className: "review-card"
   }, /*#__PURE__*/React.createElement("span", {
     className: "workspace-logo large"
-  }, "IN"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "REGISTERED COMPANY"), /*#__PURE__*/React.createElement("b", null, compName), /*#__PURE__*/React.createElement("p", null, industry, " \xB7 ", compSize)), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "MASTER ADMINISTRATOR"), /*#__PURE__*/React.createElement("b", null, adminName), /*#__PURE__*/React.createElement("p", null, adminEmail)), /*#__PURE__*/React.createElement("div", {
+  }, compName ? compName.slice(0, 2).toUpperCase() : 'CO'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "REGISTERED COMPANY"), /*#__PURE__*/React.createElement("b", null, compName || 'Your Company'), /*#__PURE__*/React.createElement("p", null, industry, " \xB7 ", compSize)), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", null, "MASTER ADMINISTRATOR"), /*#__PURE__*/React.createElement("b", null, adminName || 'Admin'), /*#__PURE__*/React.createElement("p", null, adminEmail || 'admin@company.com')), /*#__PURE__*/React.createElement("div", {
     className: "secure-callout"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "shield"
@@ -4611,27 +4634,59 @@ function Registration({
     onClick: () => step === 1 ? setScreen('portal') : setStep(step - 1)
   }, "Back"), /*#__PURE__*/React.createElement("button", {
     className: "primary-button",
+    disabled: submitting,
     onClick: async () => {
-      if (step < 3) {
-        setStep(step + 1);
+      if (step === 1) {
+        if (!compName.trim()) {
+          alert('Please enter your company name.');
+          return;
+        }
+        setStep(2);
+      } else if (step === 2) {
+        if (!adminName.trim()) {
+          alert('Please enter administrator full name.');
+          return;
+        }
+        if (!adminEmail.trim()) {
+          alert('Please enter administrator work email.');
+          return;
+        }
+        if (!adminPass || adminPass.length < 6) {
+          alert('Password must be at least 6 characters long.');
+          return;
+        }
+        if (!/[A-Za-z]/.test(adminPass) || !/[0-9]/.test(adminPass)) {
+          alert('Password must contain both letters and numbers.');
+          return;
+        }
+        if (adminPass !== confirmPass) {
+          alert('Passwords do not match. Please verify.');
+          return;
+        }
+        setStep(3);
       } else {
         if (onRegister) {
-          await onRegister({
-            companyName: compName,
+          setSubmitting(true);
+          const ok = await onRegister({
+            companyName: compName.trim(),
             industry,
             companySize: compSize,
-            companyEmail: compEmail,
-            website: compWebsite,
-            adminName,
-            adminEmail,
-            password: 'password123'
+            companyEmail: compEmail.trim() || adminEmail.trim(),
+            website: compWebsite.trim(),
+            adminName: adminName.trim(),
+            adminEmail: adminEmail.trim(),
+            password: adminPass
           });
+          setSubmitting(false);
+          if (!ok) {
+            // Stays on step 3 so user can view toast message
+          }
         } else {
           setScreen('workspace');
         }
       }
     }
-  }, step === 3 ? 'Generate Workspace' : 'Continue', " ", /*#__PURE__*/React.createElement(Icon, {
+  }, submitting ? 'Generating workspace...' : step === 3 ? 'Generate Workspace' : 'Continue', " ", /*#__PURE__*/React.createElement(Icon, {
     name: "arrow",
     size: 15
   }))))));
